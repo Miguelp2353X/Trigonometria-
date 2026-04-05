@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Círculo Unitario Interactivo | Trigonometría Visual</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    * {
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    canvas {
+        display: block;
+        margin: 0 auto;
+        cursor: grab;
+        transition: all 0.2s ease;
+    }
+    
+    canvas:active {
+        cursor: grabbing;
+    }
+    
+    .slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        outline: none;
+        border-radius: 10px;
+    }
+    
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        border: 2px solid #3b82f6;
+    }
+    
+    .fn-card {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .fn-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .fn-card.active {
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: white;
+        transform: scale(1.02);
+    }
+    
+    .formula-card {
+        background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1));
+        border-left: 3px solid #3b82f6;
+    }
+    
+    .info-card {
+        background: linear-gradient(135deg, rgba(16,185,129,0.05), rgba(59,130,246,0.05));
+        border: 1px solid rgba(59,130,246,0.2);
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .slide-in {
+        animation: slideIn 0.4s ease-out;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .property-badge {
+        background: rgba(59,130,246,0.2);
+        border-radius: 8px;
+        padding: 8px;
+        transition: all 0.2s;
+    }
+    
+    .property-badge:hover {
+        background: rgba(59,130,246,0.3);
+        transform: translateX(5px);
+    }
+</style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 min-h-screen">
+
+<div class="container mx-auto px-4 py-6 max-w-7xl">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <div class="inline-block">
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-2">
+                Círculo Unitario
+            </h1>
+            <div class="h-1 w-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+        </div>
+        <p class="text-gray-400 mt-3 text-sm md:text-base">Visualiza las funciones trigonométricas en tiempo real</p>
+    </div>
+
+    <!-- Tabs de funciones -->
+    <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-6">
+        <div class="fn-card bg-gray-800/50 backdrop-blur rounded-lg p-3 text-center active" data-fn="sin">
+            <i class="fas fa-waveform text-red-400 text-xl mb-1"></i>
+            <p class="font-semibold text-sm">sin θ</p>
+        </div>
+        <div class="fn-card bg-gray-800/50 backdrop-blur rounded-lg p-3 text-center" data-fn="cos">
+            <i class="fas fa-chart-line text-blue-400 text-xl mb-1"></i>
+            <p class="font-semibold text-sm">cos θ</p>
+        </div>
+        <div class="fn-card bg-gray-800/50 backdrop-blur rounded-lg p-3 text-center" data-fn="tan">
+            <i class="fas fa-chart-simple text-orange-400 text-xl mb-1"></i>
+            <p class="font-semibold text-sm">tan θ</p>
+        </div>
+        <div class="fn-card bg-gray-800/50 backdrop-blur rounded-lg p-3 text-center" data-fn="csc">
+            <i class="fas fa-arrow-up text-pink-400 text-xl mb-1"></i>
+            <p class="font-semibold text-sm">csc θ</p>
+        </div>
+        <div class="fn-card bg-gray-800/50 backdrop-blur rounded-lg p-3 text-center" data-fn="sec">
+            <i class="fas fa-arrow-right text-green-400 text-xl mb-1"></i>
+            <p class="font-semibold text-sm">sec θ</p>
+        </div>
+        <div class="fn-card bg-gray-800/50 backdrop-blur rounded-lg p-3 text-center" data-fn="cot">
+            <i class="fas fa-chart-line text-purple-400 text-xl mb-1"></i>
+            <p class="font-semibold text-sm">cot θ</p>
+        </div>
+    </div>
+
+    <!-- Controles principales -->
+    <div class="bg-gray-800/30 backdrop-blur-md rounded-2xl p-4 mb-6 border border-gray-700">
+        <div class="flex flex-col md:flex-row gap-4 items-center">
+            <div class="flex-1 w-full">
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-gray-300 text-sm">Ángulo: <span id="angleValue" class="text-blue-400 font-bold">45.0°</span></label>
+                    <div class="flex gap-2">
+                        <button id="degModeBtn" class="px-3 py-1 rounded-lg text-xs font-semibold transition bg-blue-600 text-white">DEG</button>
+                        <button id="radModeBtn" class="px-3 py-1 rounded-lg text-xs font-semibold transition bg-gray-700 text-gray-300">RAD</button>
+                    </div>
+                </div>
+                <input type="range" id="angleSlider" min="0" max="360" step="1" value="45" class="slider w-full">
+            </div>
+            <div class="flex gap-3">
+                <div class="relative">
+                    <input type="number" id="angleInput" value="45" step="1" class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 w-28 text-white text-center focus:outline-none focus:border-blue-500">
+                    <span class="absolute right-3 top-2 text-gray-400" id="angleUnit">°</span>
+                </div>
+                <div class="w-px h-10 bg-gray-700"></div>
+                <div class="flex-1">
+                    <label class="text-gray-300 text-sm mb-1 block">Escala: <span id="scaleValue" class="text-purple-400">1.0x</span></label>
+                    <input type="range" id="scaleSlider" min="0.5" max="2.5" step="0.1" value="1" class="slider w-32">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas principales -->
+    <div class="grid lg:grid-cols-2 gap-6 mb-6">
+        <!-- Círculo Unitario -->
+        <div class="bg-gray-800/30 backdrop-blur-md rounded-2xl p-4 border border-gray-700">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="fas fa-circle text-blue-400 text-sm"></i>
+                <h3 class="text-gray-200 font-semibold">Círculo Unitario</h3>
+                <span class="text-xs text-gray-500 ml-auto">🖱️ Arrastra el punto</span>
+            </div>
+            <div class="flex justify-center">
+                <canvas id="circleCanvas" width="400" height="400" class="w-full h-auto max-w-[400px] rounded-lg"></canvas>
+            </div>
+        </div>
+
+        <!-- Triángulo Rectángulo -->
+        <div class="bg-gray-800/30 backdrop-blur-md rounded-2xl p-4 border border-gray-700">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="fas fa-triangle-exclamation text-purple-400 text-sm"></i>
+                <h3 class="text-gray-200 font-semibold">Triángulo Rectángulo</h3>
+                <span class="text-xs text-gray-500 ml-auto">Escala ajustable</span>
+            </div>
+            <div class="flex justify-center">
+                <canvas id="triCanvas" width="400" height="400" class="w-full h-auto max-w-[400px] rounded-lg"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfica y Fórmula -->
+    <div class="grid lg:grid-cols-3 gap-6 mb-6">
+        <!-- Gráfica -->
+        <div class="lg:col-span-2 bg-gray-800/30 backdrop-blur-md rounded-2xl p-4 border border-gray-700">
+            <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-chart-line text-green-400"></i>
+                    <h3 class="text-gray-200 font-semibold">Gráfica de <span id="graphFnLabel" class="text-blue-400">sen(θ)</span></h3>
+                </div>
+                <div class="flex gap-2">
+                    <button id="clearGraphBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm transition flex items-center gap-1">
+                        <i class="fas fa-eraser text-xs"></i> Limpiar
+                    </button>
+                    <button id="plotFullBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-3 py-1 rounded-lg text-sm transition flex items-center gap-1">
+                        <i class="fas fa-chart-line text-xs"></i> Ciclo completo
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-center">
+                <canvas id="graphCanvas" width="800" height="250" class="w-full rounded-lg bg-gray-900/50"></canvas>
+            </div>
+        </div>
+
+        <!-- Fórmula y Definición -->
+        <div class="bg-gray-800/30 backdrop-blur-md rounded-2xl p-4 border border-gray-700">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="fas fa-square-root-alt text-yellow-400"></i>
+                <h3 class="text-gray-200 font-semibold">Definición</h3>
+            </div>
+            <div id="formulaContainer" class="formula-card rounded-xl p-4 fade-in">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-400 mb-2" id="formulaDisplay">
+                        sin θ = CO/H
+                    </div>
+                    <div class="text-sm text-gray-300 mb-3" id="formulaExplanation">
+                        CO = Cateto Opuesto<br>H = Hipotenusa = 1
+                    </div>
+                    <div class="border-t border-gray-700 pt-3 mt-2">
+                        <div class="text-xs text-gray-400" id="detailedFormula">
+                            sin θ = y / 1 = y
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información detallada de la función -->
+    <div class="bg-gray-800/30 backdrop-blur-md rounded-2xl p-4 mb-6 border border-gray-700">
+        <div class="flex items-center gap-2 mb-4">
+            <i class="fas fa-info-circle text-green-400 text-lg"></i>
+            <h3 class="text-gray-200 font-semibold text-lg">Información detallada de <span id="infoFnName" class="text-blue-400">sen(θ)</span></h3>
+        </div>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <!-- Periodo -->
+            <div class="property-badge slide-in">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-sync-alt text-blue-400 text-sm"></i>
+                    <span class="text-gray-300 text-xs font-semibold uppercase tracking-wider">Periodo</span>
+                </div>
+                <div class="text-white font-bold text-lg" id="fnPeriod">2π</div>
+                <div class="text-gray-500 text-xs mt-1" id="periodDesc">Se repite cada 360°</div>
+            </div>
+            
+            <!-- Rango -->
+            <div class="property-badge slide-in">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-chart-line text-purple-400 text-sm"></i>
+                    <span class="text-gray-300 text-xs font-semibold uppercase tracking-wider">Rango</span>
+                </div>
+                <div class="text-white font-bold text-lg" id="fnRange">[-1, 1]</div>
+                <div class="text-gray-500 text-xs mt-1" id="rangeDesc">Valores entre -1 y 1</div>
+            </div>
+            
+            <!-- Dominio -->
+            <div class="property-badge slide-in">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-infinity text-green-400 text-sm"></i>
+                    <span class="text-gray-300 text-xs font-semibold uppercase tracking-wider">Dominio</span>
+                </div>
+                <div class="text-white font-bold text-lg" id="fnDomain">ℝ</div>
+                <div class="text-gray-500 text-xs mt-1" id="domainDesc">Todos los reales</div>
+            </div>
+            
+            <!-- Paridad -->
+            <div class="property-badge slide-in">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-balance-scale text-yellow-400 text-sm"></i>
+                    <span class="text-gray-300 text-xs font-semibold uppercase tracking-wider">Paridad</span>
+                </div>
+                <div class="text-white font-bold text-lg" id="fnParity">Impar</div>
+                <div class="text-gray-500 text-xs mt-1" id="parityDesc">sin(-θ) = -sin(θ)</div>
+            </div>
+        </div>
+        
+        <!-- Características y gráfica explicación -->
+        <div class="grid md:grid-cols-2 gap-4 mt-2">
+            <div class="bg-gray-900/30 rounded-xl p-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-chart-simple text-orange-400 text-sm"></i>
+                    <span class="text-gray-200 text-sm font-semibold">Características de la gráfica</span>
+                </div>
+                <div class="text-gray-400 text-xs space-y-2 leading-relaxed" id="graphFeatures">
+                    • Onda sinusoidal que oscila entre -1 y 1<br>
+                    • Cruza el eje x en 0°, 180°, 360°, etc.<br>
+                    • Máximos en 90° (valor 1) y mínimos en 270° (valor -1)<br>
+                    • Simétrica respecto al origen (función impar)
+                </div>
+            </div>
+            
+            <div class="bg-gray-900/30 rounded-xl p-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-lightbulb text-yellow-400 text-sm"></i>
+                    <span class="text-gray-200 text-sm font-semibold">Cómo graficar</span>
+                </div>
+                <div class="text-gray-400 text-xs space-y-2 leading-relaxed" id="howToGraph">
+                    1. Identifica el periodo y la amplitud<br>
+                    2. Marca los puntos clave (ceros, máximos, mínimos)<br>
+                    3. Dibuja una onda suave que conecte los puntos<br>
+                    4. La gráfica es continua y suave
+                </div>
+            </div>
+        </div>
+        
+        <!-- Valores notables -->
+        <div class="mt-4 bg-gray-900/30 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="fas fa-star text-yellow-400 text-sm"></i>
+                <span class="text-gray-200 text-sm font-semibold">Valores notables</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center" id="notableValues">
+                <div class="text-gray-400 text-xs">
+                    <div class="text-white font-mono text-sm">0°</div>
+                    <div id="val0">0</div>
+                </div>
+                <div class="text-gray-400 text-xs">
+                    <div class="text-white font-mono text-sm">30° (π/6)</div>
+                    <div id="val30">0.5</div>
+                </div>
+                <div class="text-gray-400 text-xs">
+                    <div class="text-white font-mono text-sm">45° (π/4)</div>
+                    <div id="val45">0.7071</div>
+                </div>
+                <div class="text-gray-400 text-xs">
+                    <div class="text-white font-mono text-sm">60° (π/3)</div>
+                    <div id="val60">0.8660</div>
+                </div>
+                <div class="text-gray-400 text-xs">
+                    <div class="text-white font-mono text-sm">90° (π/2)</div>
+                    <div id="val90">1</div>
+                </div>
+                <div class="text-gray-400 text-xs">
+                    <div class="text-white font-mono text-sm">180° (π)</div>
+                    <div id="val180">0</div>
+                </div>
+                <div class="text-gray-400 text-xs">
+                    <div class="text-white font-mono text-sm">270° (3π/2)</div>
+                    <div id="val270">-1</div>
+                </div>
+                <div class="text-gray-400 text-xs">
+                    <div class="text-white font-mono text-sm">360° (2π)</div>
+                    <div id="val360">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats e Información -->
+    <div class="grid lg:grid-cols-3 gap-4">
+        <!-- Valores trigonométricos -->
+        <div class="bg-gray-800/30 backdrop-blur-md rounded-2xl p-4 border border-gray-700 lg:col-span-2">
+            <div class="flex items-center gap-2 mb-3">
+                <i class="fas fa-calculator text-yellow-400"></i>
+                <h3 class="text-gray-200 font-semibold">Valores Trigonométricos</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 stats-grid">
+                <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                    <div class="text-red-400 text-xs uppercase tracking-wider">sin θ</div>
+                    <div class="text-white text-xl font-bold" id="vSin">—</div>
+                    <div class="text-gray-500 text-xs">opuesto/hipotenusa</div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                    <div class="text-blue-400 text-xs uppercase tracking-wider">cos θ</div>
+                    <div class="text-white text-xl font-bold" id="vCos">—</div>
+                    <div class="text-gray-500 text-xs">adyacente/hipotenusa</div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                    <div class="text-orange-400 text-xs uppercase tracking-wider">tan θ</div>
+                    <div class="text-white text-xl font-bold" id="vTan">—</div>
+                    <div class="text-gray-500 text-xs">opuesto/adyacente</div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                    <div class="text-pink-400 text-xs uppercase tracking-wider">csc θ</div>
+                    <div class="text-white text-xl font-bold" id="vCsc">—</div>
+                    <div class="text-gray-500 text-xs">1/sin θ</div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                    <div class="text-green-400 text-xs uppercase tracking-wider">sec θ</div>
+                    <div class="text-white text-xl font-bold" id="vSec">—</div>
+                    <div class="text-gray-500 text-xs">1/cos θ</div>
+                </div>
+                <div class="bg-gray-900/50 rounded-lg p-3 text-center">
+                    <div class="text-purple-400 text-xs uppercase tracking-wider">cot θ</div>
+                    <div class="text-white text-xl font-bold" id="vCot">—</div>
+                    <div class="text-gray-500 text-xs">1/tan θ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Identidad y Cuadrante -->
+        <div class="bg-gray-800/30 backdrop-blur-md rounded-2xl p-4 border border-gray-700">
+            <div class="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-xl p-4 mb-3">
+                <div class="text-center">
+                    <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Identidad Pitagórica</div>
+                    <div class="text-2xl font-bold text-white" id="vId">—</div>
+                    <div class="text-gray-500 text-xs mt-1">sin²θ + cos²θ = 1</div>
+                </div>
+            </div>
+            <div class="bg-gray-900/50 rounded-xl p-4">
+                <div class="text-center">
+                    <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Cuadrante</div>
+                    <div class="text-3xl font-bold text-yellow-400" id="vQuad">—</div>
+                    <div class="text-gray-500 text-xs mt-1" id="quadSigns">signos</div>
+                </div>
+            </div>
+            <div class="mt-4 p-3 bg-gray-900/30 rounded-lg">
+                <div class="text-xs text-gray-400 leading-relaxed" id="quadDesc">
+                    En el círculo unitario, la hipotenusa = 1
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Configuración de canvas
+const circleCanvas = document.getElementById('circleCanvas');
+const triCanvas = document.getElementById('triCanvas');
+const graphCanvas = document.getElementById('graphCanvas');
+
+const ctx = circleCanvas.getContext('2d');
+const ttx = triCanvas.getContext('2d');
+const gtx = graphCanvas.getContext('2d');
+
+// Dimensiones
+const SIZE = 400;
+circleCanvas.width = triCanvas.width = SIZE;
+circleCanvas.height = triCanvas.height = SIZE;
+graphCanvas.width = 800;
+graphCanvas.height = 250;
+
+// Variables de estado
+let angle = 45;
+let scale = 1;
+let activeFn = 'sin';
+let graphPoints = [];
+let dragging = false;
+let useRadians = false;
+
+// Colores para cada función
+const fnColors = {
+    sin: '#ef4444',
+    cos: '#3b82f6',
+    tan: '#f97316',
+    csc: '#ec4899',
+    sec: '#10b981',
+    cot: '#a855f7'
+};
+
+const fnLabels = {
+    sin: 'sen(θ)',
+    cos: 'cos(θ)',
+    tan: 'tan(θ)',
+    csc: 'csc(θ)',
+    sec: 'sec(θ)',
+    cot: 'cot(θ)'
+};
+
+// Información detallada de cada función
+const fnDetailedInfo = {
+    sin: {
+        period: '2π (360°)',
+        range: '[-1, 1]',
+        domain: 'ℝ (todos los reales)',
+        parity: 'Impar',
+        parityDesc: 'sin(-θ) = -sin(θ)',
+        periodDesc: 'Se repite cada 360°',
+        rangeDesc: 'Valores entre -1 y 1',
+        domainDesc: 'Definida para cualquier ángulo',
+        graphFeatures: [
+            '• Onda sinusoidal suave y continua',
+            '• Cruza el eje x en 0°, 180°, 360°, ...',
+            '• Máximos en 90° (valor 1)',
+            '• Mínimos en 270° (valor -1)',
+            '• Simétrica respecto al origen',
+            '• Amplitud: 1'
+        ],
+        howToGraph: [
+            '1. Marca los puntos donde cruza el eje x (0°, 180°, 360°)',
+            '2. Marca los máximos (90°, valor 1) y mínimos (270°, valor -1)',
+            '3. Dibuja una curva suave que pase por estos puntos',
+            '4. La gráfica tiene forma de "S" alargada',
+            '5. Se repite cada 360° (periodo)'
+        ],
+        notableValues: {0:0, 30:0.5, 45:0.7071, 60:0.8660, 90:1, 180:0, 270:-1, 360:0}
+    },
+    cos: {
+        period: '2π (360°)',
+        range: '[-1, 1]',
+        domain: 'ℝ (todos los reales)',
+        parity: 'Par',
+        parityDesc: 'cos(-θ) = cos(θ)',
+        periodDesc: 'Se repite cada 360°',
+        rangeDesc: 'Valores entre -1 y 1',
+        domainDesc: 'Definida para cualquier ángulo',
+        graphFeatures: [
+            '• Onda cosenoidal similar al seno pero desfasada',
+            '• Cruza el eje x en 90° y 270°',
+            '• Máximos en 0° y 360° (valor 1)',
+            '• Mínimo en 180° (valor -1)',
+            '• Simétrica respecto al eje y (función par)',
+            '• Amplitud: 1'
+        ],
+        howToGraph: [
+            '1. Marca los máximos en 0° y 360° (valor 1)',
+            '2. Marca el mínimo en 180° (valor -1)',
+            '3. Marca los cruces en 90° y 270° (valor 0)',
+            '4. Dibuja una curva suave que conecte los puntos',
+            '5. Es una onda desplazada 90° respecto al seno'
+        ],
+        notableValues: {0:1, 30:0.8660, 45:0.7071, 60:0.5, 90:0, 180:-1, 270:0, 360:1}
+    },
+    tan: {
+        period: 'π (180°)',
+        range: '(-∞, ∞)',
+        domain: 'ℝ \ {π/2 + kπ}',
+        parity: 'Impar',
+        parityDesc: 'tan(-θ) = -tan(θ)',
+        periodDesc: 'Se repite cada 180°',
+        rangeDesc: 'Todos los números reales',
+        domainDesc: 'No definida en 90° + k·180°',
+        graphFeatures: [
+            '• Función discontinua con asíntotas verticales',
+            '• Asíntotas en 90°, 270°, 450°, ...',
+            '• Cruza el eje x en 0°, 180°, 360°, ...',
+            '• Crece de -∞ a +∞ en cada periodo',
+            '• Simétrica respecto al origen',
+            '• No tiene amplitud definida'
+        ],
+        howToGraph: [
+            '1. Dibuja líneas verticales punteadas para las asíntotas (90°, 270°)',
+            '2. Marca los cruces con el eje x (0°, 180°, 360°)',
+            '3. La curva sube de -∞ a +∞ entre asíntotas',
+            '4. Pasa por (45°, 1) y (135°, -1)',
+            '5. Se repite cada 180°'
+        ],
+        notableValues: {0:0, 30:0.5774, 45:1, 60:1.7321, 90:'∞', 180:0, 270:'∞', 360:0}
+    },
+    csc: {
+        period: '2π (360°)',
+        range: '(-∞, -1] ∪ [1, ∞)',
+        domain: 'ℝ \ {kπ}',
+        parity: 'Impar',
+        parityDesc: 'csc(-θ) = -csc(θ)',
+        periodDesc: 'Se repite cada 360°',
+        rangeDesc: 'Valores ≤ -1 o ≥ 1',
+        domainDesc: 'No definida en 0°, 180°, 360°, ...',
+        graphFeatures: [
+            '• Recíproca del seno (csc θ = 1/sen θ)',
+            '• Asíntotas donde sen θ = 0 (0°, 180°, 360°)',
+            '• Vértices en 90° (valor 1) y 270° (valor -1)',
+            '• Nunca está entre -1 y 1 (excluyendo)',
+            '• Función impar'
+        ],
+        howToGraph: [
+            '1. Dibuja asíntotas verticales donde sen θ = 0',
+            '2. Marca los vértices en 90° (1) y 270° (-1)',
+            '3. La curva va hacia ∞ cerca de las asíntotas',
+            '4. Entre asíntotas, la curva es convexa',
+            '5. Se repite cada 360°'
+        ],
+        notableValues: {0:'∞', 30:2, 45:1.4142, 60:1.1547, 90:1, 180:'∞', 270:-1, 360:'∞'}
+    },
+    sec: {
+        period: '2π (360°)',
+        range: '(-∞, -1] ∪ [1, ∞)',
+        domain: 'ℝ \ {π/2 + kπ}',
+        parity: 'Par',
+        parityDesc: 'sec(-θ) = sec(θ)',
+        periodDesc: 'Se repite cada 360°',
+        rangeDesc: 'Valores ≤ -1 o ≥ 1',
+        domainDesc: 'No definida en 90°, 270°, ...',
+        graphFeatures: [
+            '• Recíproca del coseno (sec θ = 1/cos θ)',
+            '• Asíntotas donde cos θ = 0 (90°, 270°)',
+            '• Vértices en 0° (valor 1) y 180° (valor -1)',
+            '• Nunca está entre -1 y 1 (excluyendo)',
+            '• Función par'
+        ],
+        howToGraph: [
+            '1. Dibuja asíntotas verticales donde cos θ = 0',
+            '2. Marca los vértices en 0° (1) y 180° (-1)',
+            '3. La curva va hacia ∞ cerca de las asíntotas',
+            '4. Entre asíntotas, la curva es cóncava',
+            '5. Simétrica respecto al eje y'
+        ],
+        notableValues: {0:1, 30:1.1547, 45:1.4142, 60:2, 90:'∞', 180:-1, 270:'∞', 360:1}
+    },
+    cot: {
+        period: 'π (180°)',
+        range: '(-∞, ∞)',
+        domain: 'ℝ \ {kπ}',
+        parity: 'Impar',
+        parityDesc: 'cot(-θ) = -cot(θ)',
+        periodDesc: 'Se repite cada 180°',
+        rangeDesc: 'Todos los números reales',
+        domainDesc: 'No definida en 0°, 180°, 360°, ...',
+        graphFeatures: [
+            '• Recíproca de la tangente (cot θ = 1/tan θ)',
+            '• Asíntotas donde tan θ = 0 (0°, 180°, 360°)',
+            '• Cruza el eje x en 90° y 270°',
+            '• Decrece de +∞ a -∞ en cada periodo',
+            '• Función impar'
+        ],
+        howToGraph: [
+            '1. Dibuja asíntotas verticales en 0°, 180°, 360°',
+            '2. Marca los cruces en 90° y 270° (valor 0)',
+            '3. La curva baja de +∞ a -∞ entre asíntotas',
+            '4. Pasa por (45°, 1) y (135°, -1)',
+            '5. Se repite cada 180°'
+        ],
+        notableValues: {0:'∞', 30:1.7321, 45:1, 60:0.5774, 90:0, 180:'∞', 270:0, 360:'∞'}
+    }
+};
+
+// Fórmulas detalladas para cada función
+const fnFormulas = {
+    sin: {
+        principal: 'sin θ = CO / H',
+        explanation: 'CO = Cateto Opuesto<br>H = Hipotenusa',
+        detailed: 'En círculo unitario: H = 1 → sin θ = CO / 1 = CO = y',
+        simple: 'sin θ = y'
+    },
+    cos: {
+        principal: 'cos θ = CA / H',
+        explanation: 'CA = Cateto Adyacente<br>H = Hipotenusa',
+        detailed: 'En círculo unitario: H = 1 → cos θ = CA / 1 = CA = x',
+        simple: 'cos θ = x'
+    },
+    tan: {
+        principal: 'tan θ = CO / CA',
+        explanation: 'CO = Cateto Opuesto<br>CA = Cateto Adyacente',
+        detailed: 'tan θ = sin θ / cos θ = y / x',
+        simple: 'tan θ = y/x'
+    },
+    csc: {
+        principal: 'csc θ = 1 / sin θ',
+        explanation: 'Cosecante = 1 / seno',
+        detailed: 'csc θ = H / CO = 1 / y',
+        simple: 'csc θ = 1/y'
+    },
+    sec: {
+        principal: 'sec θ = 1 / cos θ',
+        explanation: 'Secante = 1 / coseno',
+        detailed: 'sec θ = H / CA = 1 / x',
+        simple: 'sec θ = 1/x'
+    },
+    cot: {
+        principal: 'cot θ = 1 / tan θ',
+        explanation: 'Cotangente = 1 / tangente',
+        detailed: 'cot θ = cos θ / sin θ = x / y',
+        simple: 'cot θ = x/y'
+    }
+};
+
+const fnDescs = {
+    sin: '📐 sin(θ) = cateto opuesto / hipotenusa = coordenada Y del punto en el círculo unitario',
+    cos: '📏 cos(θ) = cateto adyacente / hipotenusa = coordenada X del punto en el círculo unitario',
+    tan: '📈 tan(θ) = sin(θ) / cos(θ) = pendiente del radio. No definida cuando cos(θ) = 0',
+    csc: '⬆️ csc(θ) = 1 / sin(θ) — cosecante. No definida cuando sin(θ) = 0',
+    sec: '➡️ sec(θ) = 1 / cos(θ) — secante. No definida cuando cos(θ) = 0',
+    cot: '📉 cot(θ) = cos(θ) / sin(θ) — cotangente. No definida cuando sin(θ) = 0'
+};
+
+function getAngleInRadians() {
+    return angle * Math.PI / 180;
+}
+
+function getDisplayAngle() {
+    if (useRadians) {
+        const rad = angle * Math.PI / 180;
+        return rad.toFixed(3);
+    }
+    return angle.toFixed(1);
+}
+
+function formatValue(v) {
+    if (!isFinite(v)) return '∞';
+    return v.toFixed(4);
+}
+
+function getTrigValues(deg) {
+    const rad = deg * Math.PI / 180;
+    const s = Math.sin(rad);
+    const c = Math.cos(rad);
+    const t = s / c;
+    return {
+        rad, s, c, t,
+        csc: 1 / s,
+        sec: 1 / c,
+        cot: c / s
+    };
+}
+
+function getActiveFnValue(deg) {
+    const rad = deg * Math.PI / 180;
+    const s = Math.sin(rad);
+    const c = Math.cos(rad);
+    
+    switch(activeFn) {
+        case 'sin': return s;
+        case 'cos': return c;
+        case 'tan': return s / c;
+        case 'csc': return 1 / s;
+        case 'sec': return 1 / c;
+        case 'cot': return c / s;
+        default: return s;
+    }
+}
+
+function getQuadrant(deg) {
+    const d = ((deg % 360) + 360) % 360;
+    if (d < 90) return { num: 'I', sign: 'sin +, cos +, tan +', desc: '0° a 90° (primer cuadrante)' };
+    if (d < 180) return { num: 'II', sign: 'sin +, cos -, tan -', desc: '90° a 180° (segundo cuadrante)' };
+    if (d < 270) return { num: 'III', sign: 'sin -, cos -, tan +', desc: '180° a 270° (tercer cuadrante)' };
+    return { num: 'IV', sign: 'sin -, cos +, tan -', desc: '270° a 360° (cuarto cuadrante)' };
+}
+
+// Actualizar información detallada de la función
+function updateDetailedInfo() {
+    const info = fnDetailedInfo[activeFn];
+    document.getElementById('infoFnName').innerHTML = fnLabels[activeFn];
+    document.getElementById('fnPeriod').innerHTML = info.period;
+    document.getElementById('fnRange').innerHTML = info.range;
+    document.getElementById('fnDomain').innerHTML = info.domain;
+    document.getElementById('fnParity').innerHTML = info.parity;
+    document.getElementById('periodDesc').innerHTML = info.periodDesc;
+    document.getElementById('rangeDesc').innerHTML = info.rangeDesc;
+    document.getElementById('domainDesc').innerHTML = info.domainDesc;
+    document.getElementById('parityDesc').innerHTML = info.parityDesc;
+    
+    // Actualizar características de la gráfica
+    const graphFeaturesHtml = info.graphFeatures.join('<br>');
+    document.getElementById('graphFeatures').innerHTML = graphFeaturesHtml;
+    
+    // Actualizar cómo graficar
+    const howToGraphHtml = info.howToGraph.join('<br>');
+    document.getElementById('howToGraph').innerHTML = howToGraphHtml;
+    
+    // Actualizar valores notables
+    const notable = info.notableValues;
+    const angleUnit = useRadians ? 'rad' : '°';
+    document.getElementById('val0').innerHTML = formatValue(notable[0]);
+    document.getElementById('val30').innerHTML = formatValue(notable[30]);
+    document.getElementById('val45').innerHTML = formatValue(notable[45]);
+    document.getElementById('val60').innerHTML = formatValue(notable[60]);
+    document.getElementById('val90').innerHTML = formatValue(notable[90]);
+    document.getElementById('val180').innerHTML = formatValue(notable[180]);
+    document.getElementById('val270').innerHTML = formatValue(notable[270]);
+    document.getElementById('val360').innerHTML = formatValue(notable[360]);
+}
+
+// Actualizar fórmula mostrada
+function updateFormula() {
+    const v = getTrigValues(angle);
+    const formula = fnFormulas[activeFn];
+    const container = document.getElementById('formulaContainer');
+    
+    container.classList.remove('fade-in');
+    setTimeout(() => {
+        document.getElementById('formulaDisplay').innerHTML = formula.principal;
+        document.getElementById('formulaExplanation').innerHTML = formula.explanation;
+        
+        let detailedText = formula.detailed;
+        if (activeFn === 'sin') {
+            detailedText = `sin θ = y / 1 = ${v.s.toFixed(4)}`;
+        } else if (activeFn === 'cos') {
+            detailedText = `cos θ = x / 1 = ${v.c.toFixed(4)}`;
+        } else if (activeFn === 'tan') {
+            detailedText = `tan θ = y / x = ${v.t.toFixed(4)}`;
+        } else if (activeFn === 'csc') {
+            detailedText = `csc θ = 1 / y = ${v.csc.toFixed(4)}`;
+        } else if (activeFn === 'sec') {
+            detailedText = `sec θ = 1 / x = ${v.sec.toFixed(4)}`;
+        } else if (activeFn === 'cot') {
+            detailedText = `cot θ = x / y = ${v.cot.toFixed(4)}`;
+        }
+        
+        document.getElementById('detailedFormula').innerHTML = detailedText;
+        container.classList.add('fade-in');
+    }, 10);
+}
+
+// Dibujar círculo unitario
+function drawCircle() {
+    const v = getTrigValues(angle);
+    const cx = SIZE/2, cy = SIZE/2, r = 150;
+    const px = cx + r * v.c;
+    const py = cy - r * v.s;
+    
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    
+    // Grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    for (let i = -1; i <= 1; i++) {
+        const x = cx + r * i;
+        const y = cy - r * i;
+        ctx.beginPath();
+        ctx.moveTo(x, cy - r - 10);
+        ctx.lineTo(x, cy + r + 10);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - r - 10, y);
+        ctx.lineTo(cx + r + 10, y);
+        ctx.stroke();
+    }
+    
+    // Ejes
+    ctx.strokeStyle = 'rgba(100,181,246,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx - r - 20, cy);
+    ctx.lineTo(cx + r + 20, cy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - r - 20);
+    ctx.lineTo(cx, cy + r + 20);
+    ctx.stroke();
+    
+    // Círculo
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(100,181,246,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Radio
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(px, py);
+    ctx.strokeStyle = fnColors[activeFn];
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    
+    // Visualización específica de la función
+    const color = fnColors[activeFn];
+    if (activeFn === 'sin') {
+        ctx.beginPath();
+        ctx.moveTo(px, cy);
+        ctx.lineTo(px, py);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('y = ' + v.s.toFixed(3), px + 10, (cy + py)/2);
+    } else if (activeFn === 'cos') {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(px, cy);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('x = ' + v.c.toFixed(3), (cx + px)/2, cy - 10);
+    } else if (activeFn === 'tan' && isFinite(v.t)) {
+        const tanY = cy - r * v.t;
+        ctx.beginPath();
+        ctx.moveTo(px, cy);
+        ctx.lineTo(px, tanY);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + r, tanY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('tan = ' + v.t.toFixed(3), px + 10, (cy + tanY)/2);
+    }
+    
+    // Arco del ángulo
+    ctx.beginPath();
+    ctx.arc(cx, cy, 35, 0, -v.rad, true);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Etiqueta del ángulo
+    ctx.font = 'bold 14px Arial';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    const angleText = useRadians ? `${v.rad.toFixed(3)} rad` : `${angle.toFixed(1)}°`;
+    ctx.fillText(angleText, cx + 50 * Math.cos(-v.rad/2), cy - 50 * Math.sin(-v.rad/2));
+    
+    // Punto
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    
+    // Centro
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fill();
+    
+    // Etiquetas de ejes
+    ctx.font = '12px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.textAlign = 'center';
+    ctx.fillText('1', cx + r + 10, cy - 5);
+    ctx.fillText('-1', cx - r - 10, cy - 5);
+    ctx.fillText('1', cx, cy - r - 10);
+    ctx.fillText('-1', cx, cy + r + 15);
+    ctx.fillText('0', cx - 8, cy + 8);
+}
+
+// Dibujar triángulo
+function drawTriangle() {
+    const v = getTrigValues(angle);
+    ttx.clearRect(0, 0, SIZE, SIZE);
+    
+    const h = 120 * scale;
+    const adj = h * Math.abs(v.c);
+    const opp = h * Math.abs(v.s);
+    const x1 = 70, y1 = SIZE - 70;
+    const x2 = x1 + adj, y2 = y1 - opp;
+    
+    // Lados
+    ttx.beginPath();
+    ttx.moveTo(x1, y1);
+    ttx.lineTo(x2, y1);
+    ttx.strokeStyle = '#3b82f6';
+    ttx.lineWidth = 3;
+    ttx.stroke();
+    
+    ttx.beginPath();
+    ttx.moveTo(x2, y1);
+    ttx.lineTo(x2, y2);
+    ttx.strokeStyle = '#ef4444';
+    ttx.lineWidth = 3;
+    ttx.stroke();
+    
+    ttx.beginPath();
+    ttx.moveTo(x1, y1);
+    ttx.lineTo(x2, y2);
+    ttx.strokeStyle = fnColors[activeFn];
+    ttx.lineWidth = 2.5;
+    ttx.stroke();
+    
+    // Marca de ángulo recto
+    const rectSize = 12;
+    ttx.beginPath();
+    ttx.moveTo(x2 - rectSize, y1);
+    ttx.lineTo(x2 - rectSize, y1 - rectSize);
+    ttx.lineTo(x2, y1 - rectSize);
+    ttx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ttx.lineWidth = 1.5;
+    ttx.stroke();
+    
+    // Arco del ángulo
+    ttx.beginPath();
+    ttx.arc(x1, y1, 30, 0, -Math.abs(v.rad), true);
+    ttx.strokeStyle = fnColors[activeFn];
+    ttx.lineWidth = 2;
+    ttx.stroke();
+    
+    // Etiquetas
+    ttx.font = '13px Arial';
+    ttx.fillStyle = '#3b82f6';
+    ttx.textAlign = 'center';
+    ttx.fillText(`CA = ${adj.toFixed(2)}`, (x1 + x2)/2, y1 + 20);
+    
+    ttx.fillStyle = '#ef4444';
+    ttx.fillText(`CO = ${opp.toFixed(2)}`, x2 + 25, (y1 + y2)/2);
+    
+    ttx.fillStyle = fnColors[activeFn];
+    ttx.fillText(`H = ${h.toFixed(2)}`, (x1 + x2)/2 - 20, (y1 + y2)/2 - 15);
+    
+    ttx.fillStyle = fnColors[activeFn];
+    ttx.font = 'bold 14px Arial';
+    const angleText = useRadians ? `${v.rad.toFixed(3)} rad` : `${angle.toFixed(1)}°`;
+    ttx.fillText(`θ = ${angleText}`, x1 + 45, y1 - 15);
+}
+
+// Dibujar gráfica
+function drawGraph() {
+    const W = graphCanvas.width, H = graphCanvas.height;
+    gtx.clearRect(0, 0, W, H);
+    
+    const margin = { left: 50, right: 20, top: 20, bottom: 30 };
+    const graphW = W - margin.left - margin.right;
+    const graphH = H - margin.top - margin.bottom;
+    const centerY = margin.top + graphH/2;
+    
+    // Dibujar fondo
+    gtx.fillStyle = 'rgba(0,0,0,0.3)';
+    gtx.fillRect(0, 0, W, H);
+    
+    // Grid
+    gtx.strokeStyle = 'rgba(255,255,255,0.08)';
+    gtx.lineWidth = 1;
+    for (let i = 0; i <= 8; i++) {
+        const x = margin.left + i * graphW / 8;
+        gtx.beginPath();
+        gtx.moveTo(x, margin.top);
+        gtx.lineTo(x, margin.top + graphH);
+        gtx.stroke();
+    }
+    for (let i = 0; i <= 4; i++) {
+        const y = margin.top + i * graphH / 4;
+        gtx.beginPath();
+        gtx.moveTo(margin.left, y);
+        gtx.lineTo(margin.left + graphW, y);
+        gtx.stroke();
+    }
+    
+    // Ejes
+    gtx.strokeStyle = 'rgba(100,181,246,0.6)';
+    gtx.lineWidth = 2;
+    gtx.beginPath();
+    gtx.moveTo(margin.left, margin.top);
+    gtx.lineTo(margin.left, margin.top + graphH);
+    gtx.stroke();
+    gtx.beginPath();
+    gtx.moveTo(margin.left, centerY);
+    gtx.lineTo(margin.left + graphW, centerY);
+    gtx.stroke();
+    
+    // Etiquetas Y
+    gtx.font = '10px Arial';
+    gtx.fillStyle = 'rgba(255,255,255,0.6)';
+    gtx.textAlign = 'right';
+    gtx.fillText('1', margin.left - 5, centerY - graphH/4 + 4);
+    gtx.fillText('0.5', margin.left - 5, centerY - graphH/8 + 4);
+    gtx.fillText('0', margin.left - 5, centerY + 4);
+    gtx.fillText('-0.5', margin.left - 5, centerY + graphH/8 + 4);
+    gtx.fillText('-1', margin.left - 5, centerY + graphH/4 + 4);
+    
+    // Etiquetas X
+    gtx.textAlign = 'center';
+    gtx.fillStyle = 'rgba(255,255,255,0.6)';
+    if (useRadians) {
+        gtx.fillText('0', margin.left, margin.top + graphH + 20);
+        gtx.fillText('π/2', margin.left + graphW/4, margin.top + graphH + 20);
+        gtx.fillText('π', margin.left + graphW/2, margin.top + graphH + 20);
+        gtx.fillText('3π/2', margin.left + 3*graphW/4, margin.top + graphH + 20);
+        gtx.fillText('2π', margin.left + graphW, margin.top + graphH + 20);
+    } else {
+        gtx.fillText('0°', margin.left, margin.top + graphH + 20);
+        gtx.fillText('90°', margin.left + graphW/4, margin.top + graphH + 20);
+        gtx.fillText('180°', margin.left + graphW/2, margin.top + graphH + 20);
+        gtx.fillText('270°', margin.left + 3*graphW/4, margin.top + graphH + 20);
+        gtx.fillText('360°', margin.left + graphW, margin.top + graphH + 20);
+    }
+    
+    // Dibujar la gráfica
+    const color = fnColors[activeFn];
+    if (graphPoints.length > 1) {
+        gtx.beginPath();
+        let started = false;
+        
+        for (let i = 0; i < graphPoints.length; i++) {
+            const point = graphPoints[i];
+            const x = margin.left + (point.deg / 360) * graphW;
+            const val = getActiveFnValue(point.deg);
+            
+            let displayVal = val;
+            if (!isFinite(val) || Math.abs(val) > 2.5) {
+                started = false;
+                continue;
+            }
+            
+            const y = centerY - (displayVal / 2) * (graphH / 2);
+            
+            if (!started) {
+                gtx.moveTo(x, y);
+                started = true;
+            } else {
+                gtx.lineTo(x, y);
+            }
+        }
+        
+        gtx.strokeStyle = color;
+        gtx.lineWidth = 2.5;
+        gtx.stroke();
+    }
+    
+    // Dibujar punto actual
+    const currentVal = getActiveFnValue(angle);
+    if (isFinite(currentVal) && Math.abs(currentVal) <= 2.5) {
+        const cx = margin.left + (angle / 360) * graphW;
+        const cy = centerY - (currentVal / 2) * (graphH / 2);
+        
+        gtx.beginPath();
+        gtx.arc(cx, cy, 6, 0, Math.PI * 2);
+        gtx.fillStyle = color;
+        gtx.fill();
+        gtx.beginPath();
+        gtx.arc(cx, cy, 3, 0, Math.PI * 2);
+        gtx.fillStyle = 'white';
+        gtx.fill();
+        
+        gtx.font = 'bold 11px Arial';
+        gtx.fillStyle = color;
+        gtx.textAlign = 'center';
+        gtx.fillText(currentVal.toFixed(3), cx, cy - 10);
+    }
+}
+
+// Actualizar estadísticas
+function updateStats() {
+    const v = getTrigValues(angle);
+    const quad = getQuadrant(angle);
+    
+    document.getElementById('vSin').textContent = formatValue(v.s);
+    document.getElementById('vCos').textContent = formatValue(v.c);
+    document.getElementById('vTan').textContent = formatValue(v.t);
+    document.getElementById('vCsc').textContent = formatValue(v.csc);
+    document.getElementById('vSec').textContent = formatValue(v.sec);
+    document.getElementById('vCot').textContent = formatValue(v.cot);
+    document.getElementById('vId').textContent = (v.s**2 + v.c**2).toFixed(6);
+    document.getElementById('vQuad').textContent = quad.num;
+    document.getElementById('quadSigns').textContent = quad.sign;
+    document.getElementById('quadDesc').innerHTML = quad.desc;
+    
+    const angleText = useRadians ? `${v.rad.toFixed(3)} rad` : `${angle.toFixed(1)}°`;
+    document.getElementById('angleValue').innerHTML = angleText;
+    document.getElementById('angleUnit').innerHTML = useRadians ? 'rad' : '°';
+}
+
+// Actualizar todo
+function update() {
+    drawCircle();
+    drawTriangle();
+    drawGraph();
+    updateStats();
+    updateFormula();
+    updateDetailedInfo();
+}
+
+function setAngleMode(radians) {
+    useRadians = radians;
+    
+    const degBtn = document.getElementById('degModeBtn');
+    const radBtn = document.getElementById('radModeBtn');
+    
+    if (useRadians) {
+        radBtn.classList.remove('bg-gray-700', 'text-gray-300');
+        radBtn.classList.add('bg-blue-600', 'text-white');
+        degBtn.classList.remove('bg-blue-600', 'text-white');
+        degBtn.classList.add('bg-gray-700', 'text-gray-300');
+    } else {
+        degBtn.classList.remove('bg-gray-700', 'text-gray-300');
+        degBtn.classList.add('bg-blue-600', 'text-white');
+        radBtn.classList.remove('bg-blue-600', 'text-white');
+        radBtn.classList.add('bg-gray-700', 'text-gray-300');
+    }
+    
+    update();
+}
+
+function clearGraph() {
+    graphPoints = [];
+    update();
+}
+
+function plotFull() {
+    graphPoints = [];
+    for (let d = 0; d <= 360; d += 2) {
+        graphPoints.push({ deg: d });
+    }
+    update();
+}
+
+// Event Listeners
+const angleSlider = document.getElementById('angleSlider');
+const angleInput = document.getElementById('angleInput');
+const scaleSlider = document.getElementById('scaleSlider');
+const scaleValue = document.getElementById('scaleValue');
+
+angleSlider.addEventListener('input', (e) => {
+    angle = parseFloat(e.target.value);
+    angleInput.value = getDisplayAngle();
+    graphPoints.push({ deg: angle });
+    if (graphPoints.length > 500) graphPoints = graphPoints.slice(-400);
+    update();
+});
+
+angleInput.addEventListener('input', (e) => {
+    let value = parseFloat(e.target.value);
+    if (isNaN(value)) return;
+    
+    if (useRadians) {
+        angle = value * 180 / Math.PI;
+    } else {
+        angle = value;
+    }
+    
+    angle = ((angle % 360) + 360) % 360;
+    angleSlider.value = angle.toFixed(1);
+    graphPoints.push({ deg: angle });
+    if (graphPoints.length > 500) graphPoints = graphPoints.slice(-400);
+    update();
+});
+
+scaleSlider.addEventListener('input', (e) => {
+    scale = parseFloat(e.target.value);
+    scaleValue.textContent = `${scale.toFixed(1)}x`;
+    update();
+});
+
+document.getElementById('degModeBtn').addEventListener('click', () => setAngleMode(false));
+document.getElementById('radModeBtn').addEventListener('click', () => setAngleMode(true));
+
+document.querySelectorAll('.fn-card').forEach(card => {
+    card.addEventListener('click', () => {
+        document.querySelectorAll('.fn-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        activeFn = card.dataset.fn;
+        document.getElementById('graphFnLabel').textContent = fnLabels[activeFn];
+        document.getElementById('fnDesc').textContent = fnDescs[activeFn];
+        graphPoints = [];
+        update();
+    });
+});
+
+document.getElementById('clearGraphBtn').addEventListener('click', clearGraph);
+document.getElementById('plotFullBtn').addEventListener('click', plotFull);
+
+// Interacción con el círculo
+circleCanvas.addEventListener('mousedown', () => dragging = true);
+document.addEventListener('mouseup', () => dragging = false);
+circleCanvas.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const rect = circleCanvas.getBoundingClientRect();
+    const scaleX = SIZE / rect.width;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleX;
+    const dx = x - SIZE/2;
+    const dy = SIZE/2 - y;
+    let newAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+    newAngle = (newAngle + 360) % 360;
+    angle = newAngle;
+    angleSlider.value = angle.toFixed(1);
+    graphPoints.push({ deg: angle });
+    if (graphPoints.length > 500) graphPoints = graphPoints.slice(-400);
+    update();
+});
+
+// Soporte táctil
+circleCanvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    dragging = true;
+});
+document.addEventListener('touchend', () => dragging = false);
+circleCanvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!dragging) return;
+    const rect = circleCanvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const scaleX = SIZE / rect.width;
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleX;
+    const dx = x - SIZE/2;
+    const dy = SIZE/2 - y;
+    let newAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+    newAngle = (newAngle + 360) % 360;
+    angle = newAngle;
+    angleSlider.value = angle.toFixed(1);
+    graphPoints.push({ deg: angle });
+    if (graphPoints.length > 500) graphPoints = graphPoints.slice(-400);
+    update();
+});
+
+// Inicializar
+plotFull();
+</script>
+</body>
+</html>
